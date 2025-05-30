@@ -19,9 +19,9 @@
 				<td>@product.Description</td>
 				<td>@product.Category.Name</td>
 				<td>
-					<a asp-action="Display" asp-route-id="@product.Id">View</a> |
-					<a asp-action="Update" asp-route-id="@product.Id">Edit</a> |
-					<a asp-action="Delete" asp-route-id="@product.Id">Delete</a>
+					<a asp-action="Display" asp-route-id="@product.Id" class="btn btn-danger btn-sm">View</a> |
+					<a asp-action="Update" asp-route-id="@product.Id" class="btn btn-danger btn-sm">Edit</a> |
+					<a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger btn-sm">Delete</a>
 				</td>
 			</tr>
 		}

@@ -17,6 +17,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IProductRepository, EFProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, EFCategoryRepository>();
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
+builder.Services.AddScoped<IProductVideoRepository, EFProductVideoRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

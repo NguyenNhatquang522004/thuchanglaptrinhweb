@@ -29,6 +29,15 @@ namespace nguyennhatquang_2280618967.Controllers
             var products = await _productRepository.GetAllAsync();
             return View(products);
         }
+        public async Task<IActionResult> Delete(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
 
         // Hiển thị form thêm sản phẩm mới
         public async Task<IActionResult> Add()
@@ -308,5 +317,7 @@ namespace nguyennhatquang_2280618967.Controllers
             await _productImageRepository.DeleteAsync(imageId);
             return RedirectToAction("Update", new { id = productId });
         }
+
+
     }
 }

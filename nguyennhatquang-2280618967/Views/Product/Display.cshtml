@@ -1,12 +1,308 @@
 ﻿@model nguyennhatquang_2280618967.Models.Product
-<h2>@Model.Name</h2>
-<div>
-	<h3>Price: @Model.Price</h3>
-	<p>@Model.Description</p>
-	@if (!string.IsNullOrEmpty(Model.ImageUrl))
-	{
-		<img src="@Model.ImageUrl" alt="Product Image" style="max-width:
-	200px;" />
-	}
+@{
+    ViewData["Title"] = "Product Details";
+    var productImages = ViewBag.ProductImages as IEnumerable<nguyennhatquang_2280618967.Models.ProductImage>;
+    var productVideos = ViewBag.ProductVideos as IEnumerable<nguyennhatquang_2280618967.Models.ProductVideo>;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Products</a></li>
+                    <li class="breadcrumb-item active">@Model.Name</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Product Media Section -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Product Media</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Main Image -->
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div class="text-center mb-4">
+                            <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid main-product-image" />
+                            <p class="text-muted mt-2"><small>Main Product Image</small></p>
+                        </div>
+                    }
+
+                    <!-- Media Tabs -->
+                    @if ((productImages != null && productImages.Any()) || (productVideos != null && productVideos.Any()))
+                    {
+                        <ul class="nav nav-tabs" id="mediaTab" role="tablist">
+                            @if (productImages != null && productImages.Any())
+                            {
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button" role="tab">
+                                        <i class="fas fa-images"></i> Image Gallery (@productImages.Count())
+                                    </button>
+                                </li>
+                            }
+                            @if (productVideos != null && productVideos.Any())
+                            {
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link @(productImages == null || !productImages.Any() ? "active" : "")" id="videos-tab" data-bs-toggle="tab" data-bs-target="#videos" type="button" role="tab">
+                                        <i class="fas fa-video"></i> Videos (@productVideos.Count())
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+
+                        <div class="tab-content mt-3" id="mediaTabContent">
+                            <!-- Image Gallery Tab -->
+                            @if (productImages != null && productImages.Any())
+                            {
+                                <div class="tab-pane fade show active" id="gallery" role="tabpanel">
+                                    <div class="row">
+                                        @foreach (var image in productImages)
+                                        {
+                                            <div class="col-md-4 col-sm-6 mb-3">
+                                                <div class="image-item">
+                                                    <img src="@image.Url" alt="Product Image" class="img-fluid gallery-image" 
+                                                         data-bs-toggle="modal" data-bs-target="#imageModal" 
+                                                         data-image-src="@image.Url" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Videos Tab -->
+                            @if (productVideos != null && productVideos.Any())
+                            {
+                                <div class="tab-pane fade @(productImages == null || !productImages.Any() ? "show active" : "")" id="videos" role="tabpanel">
+                                    <div class="row">
+                                        @foreach (var video in productVideos)
+                                        {
+                                            <div class="col-lg-6 col-md-12 mb-4">
+                                                <div class="video-item">
+                                                    <video controls class="w-100 video-player">
+                                                        <source src="@video.Url" type="@video.ContentType">
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                    <div class="video-info mt-2">
+                                                        @if (!string.IsNullOrEmpty(video.Title))
+                                                        {
+                                                            <h6 class="video-title">@video.Title</h6>
+                                                        }
+                                                        @if (!string.IsNullOrEmpty(video.Description))
+                                                        {
+                                                            <p class="video-description text-muted small">@video.Description</p>
+                                                        }
+                                                        <div class="video-meta">
+                                                            <small class="text-muted">
+                                                                <i class="fas fa-file-video"></i> @video.ContentType
+                                                                @if (video.FileSize > 0)
+                                                                {
+                                                                    <span class="ms-2">
+                                                                        <i class="fas fa-hdd"></i> @FormatFileSize(video.FileSize)
+                                                                    </span>
+                                                                }
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Information Section -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Product Information</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="product-title">@Model.Name</h3>
+                    <h4 class="product-price text-success mb-3">$@Model.Price.ToString("F2")</h4>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="product-description">
+                            <h6>Description</h6>
+                            <p class="text-muted">@Model.Description</p>
+                        </div>
+                    }
+
+                    @if (Model.Category != null)
+                    {
+                        <div class="product-category mb-3">
+                            <h6>Category</h6>
+                            <span class="badge bg-primary">@Model.Category.Name</span>
+                        </div>
+                    }
+
+                    <!-- Media Summary -->
+                    <div class="media-summary">
+                        <h6>Media Summary</h6>
+                        <ul class="list-unstyled">
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <li><i class="fas fa-image text-primary"></i> 1 Main Image</li>
+                            }
+                            @if (productImages != null && productImages.Any())
+                            {
+                                <li><i class="fas fa-images text-info"></i> @productImages.Count() Additional Images</li>
+                            }
+                            @if (productVideos != null && productVideos.Any())
+                            {
+                                <li><i class="fas fa-video text-success"></i> @productVideos.Count() Videos</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons mt-4">
+                        <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-warning btn-block mb-2">
+                            <i class="fas fa-edit"></i> Edit Product
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary btn-block">
+                            <i class="fas fa-arrow-left"></i> Back to Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<a asp-action="Index">Back to List</a>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Product Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="Product Image" class="img-fluid" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .main-product-image {
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-image {
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+            .gallery-image:hover {
+                transform: scale(1.05);
+            }
+
+        .video-player {
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-title {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .video-description {
+            margin-bottom: 10px;
+        }
+
+        .video-meta {
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        .product-title {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .media-summary ul li {
+            padding: 3px 0;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+        }
+
+        .image-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .video-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Image modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            
+            imageModal.addEventListener('show.bs.modal', function(event) {
+                const trigger = event.relatedTarget;
+                const imageSrc = trigger.getAttribute('data-image-src');
+                modalImage.src = imageSrc;
+            });
+
+            // Video player enhancements
+            const videoPlayers = document.querySelectorAll('.video-player');
+            videoPlayers.forEach(video => {
+                video.addEventListener('loadedmetadata', function() {
+                    // You can add video duration display here if needed
+                });
+            });
+        });
+    </script>
+}
+
+@functions {
+    string FormatFileSize(long bytes)
+    {
+        if (bytes == 0) return "0 Bytes";
+        
+        string[] sizes = { "Bytes", "KB", "MB", "GB" };
+        int i = (int)Math.Floor(Math.Log(bytes) / Math.Log(1024));
+        return Math.Round(bytes / Math.Pow(1024, i), 2) + " " + sizes[i];
+    }
+}

@@ -132,7 +132,7 @@
                                     </button>
                                     <div class="mt-2">
                                         <small class="text-info">
-                                            <i class="fas fa-info-circle"></i> 
+                                            <i class="fas fa-info-circle"></i>
                                             Recommended: Use MP4 format for better compatibility. Max file size: 100MB per video.
                                         </small>
                                     </div>
@@ -327,4 +327,277 @@
             e.currentTarget.classList.remove('dragover');
         }
 
-        function handleDrop(e
+        function handleDrop(e, type) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                if (type === 'main' && files.length === 1) {
+                    handleMainImage(files[0]);
+                } else if (type === 'images') {
+                    handleAdditionalImages(Array.from(files).filter(f => f.type.startsWith('image/')));
+                } else if (type === 'videos') {
+                    handleProductVideos(Array.from(files).filter(f => f.type.startsWith('video/')));
+                }
+            }
+        }
+
+        function handleMainImageSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleMainImage(file);
+            }
+        }
+
+        function handleMainImage(file) {
+            const preview = document.getElementById('mainImagePreview');
+            preview.innerHTML = '';
+
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `
+                        <div class="text-center">
+                            <img src="${e.target.result}" class="main-image-preview img-thumbnail" alt="Main image preview" />
+                            <div class="mt-2">
+                                <small class="text-success"><i class="fas fa-check"></i> Main image selected: ${file.name}</small>
+                            </div>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleAdditionalImagesSelect(e) {
+            const files = Array.from(e.target.files);
+            handleAdditionalImages(files);
+            e.target.value = '';
+        }
+
+        function handleAdditionalImages(files) {
+            files.forEach(file => {
+                if (file && file.type.startsWith('image/')) {
+                    const imageId = 'img_' + (++imageCounter);
+                    additionalImages.push({
+                        id: imageId,
+                        file: file,
+                        name: file.name,
+                        type: 'image'
+                    });
+
+                    addImagePreview(file, imageId);
+                    createHiddenFileInput(file, imageId, 'additionalImages');
+                }
+            });
+            updateImageCounter();
+        }
+
+        function handleProductVideosSelect(e) {
+            const files = Array.from(e.target.files);
+            handleProductVideos(files);
+            e.target.value = '';
+        }
+
+        function handleProductVideos(files) {
+            files.forEach(file => {
+                if (file && file.type.startsWith('video/')) {
+                    // Check file size (100MB limit)
+                    const maxSize = 100 * 1024 * 1024; // 100MB
+                    if (file.size > maxSize) {
+                        alert(`Video "${file.name}" is too large. Maximum size is 100MB.`);
+                        return;
+                    }
+
+                    const videoId = 'vid_' + (++videoCounter);
+                    productVideos.push({
+                        id: videoId,
+                        file: file,
+                        name: file.name,
+                        type: 'video',
+                        size: file.size
+                    });
+
+                    addVideoPreview(file, videoId);
+                    createHiddenFileInput(file, videoId, 'productVideos');
+                }
+            });
+            updateVideoCounter();
+        }
+
+        function addImagePreview(file, imageId) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imagesGrid = document.getElementById('imagesGrid');
+                const imageHtml = `
+                    <div class="col-md-4 col-sm-6" id="preview_${imageId}">
+                        <div class="media-preview-item">
+                            <img src="${e.target.result}" alt="Preview" />
+                            <button type="button" class="media-remove-btn" onclick="removeMedia('${imageId}', 'image')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="media-name">${file.name}</div>
+                        </div>
+                    </div>
+                `;
+                imagesGrid.insertAdjacentHTML('beforeend', imageHtml);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addVideoPreview(file, videoId) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const videosGrid = document.getElementById('videosGrid');
+                const videoHtml = `
+                    <div class="col-md-4 col-sm-6" id="preview_${videoId}">
+                        <div class="media-preview-item">
+                            <video src="${e.target.result}" controls muted></video>
+                            <button type="button" class="media-remove-btn" onclick="removeMedia('${videoId}', 'video')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="media-name">${file.name}</div>
+                            <div class="media-name text-info">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                `;
+                videosGrid.insertAdjacentHTML('beforeend', videoHtml);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function createHiddenFileInput(file, mediaId, inputName) {
+            const hiddenContainer = document.getElementById('hiddenFileInputs');
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.name = inputName;
+            input.id = `hidden_${mediaId}`;
+            input.style.display = 'none';
+
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+
+            hiddenContainer.appendChild(input);
+        }
+
+        function removeMedia(mediaId, mediaType) {
+            // Remove from preview
+            const previewElement = document.getElementById(`preview_${mediaId}`);
+            if (previewElement) {
+                previewElement.remove();
+            }
+
+            // Remove from hidden inputs
+            const hiddenInput = document.getElementById(`hidden_${mediaId}`);
+            if (hiddenInput) {
+                hiddenInput.remove();
+            }
+
+            // Remove from respective array
+            if (mediaType === 'image') {
+                additionalImages = additionalImages.filter(img => img.id !== mediaId);
+                updateImageCounter();
+            } else if (mediaType === 'video') {
+                productVideos = productVideos.filter(vid => vid.id !== mediaId);
+                updateVideoCounter();
+            }
+        }
+
+        function clearAllImages() {
+            if (additionalImages.length === 0) return;
+
+            if (confirm('Are you sure you want to remove all additional images?')) {
+                document.getElementById('imagesGrid').innerHTML = '';
+
+                // Remove hidden inputs for images
+                additionalImages.forEach(img => {
+                    const hiddenInput = document.getElementById(`hidden_${img.id}`);
+                    if (hiddenInput) hiddenInput.remove();
+                });
+
+                additionalImages = [];
+                updateImageCounter();
+            }
+        }
+
+        function clearAllVideos() {
+            if (productVideos.length === 0) return;
+
+            if (confirm('Are you sure you want to remove all videos?')) {
+                document.getElementById('videosGrid').innerHTML = '';
+
+                // Remove hidden inputs for videos
+                productVideos.forEach(vid => {
+                    const hiddenInput = document.getElementById(`hidden_${vid.id}`);
+                    if (hiddenInput) hiddenInput.remove();
+                });
+
+                productVideos = [];
+                updateVideoCounter();
+            }
+        }
+
+        function updateImageCounter() {
+            const counter = document.getElementById('imageCounter');
+            const count = document.getElementById('imageCount');
+
+            if (additionalImages.length > 0) {
+                counter.style.display = 'block';
+                count.textContent = additionalImages.length;
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+
+        function updateVideoCounter() {
+            const counter = document.getElementById('videoCounter');
+            const count = document.getElementById('videoCount');
+
+            if (productVideos.length > 0) {
+                counter.style.display = 'block';
+                count.textContent = productVideos.length;
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Form submission validation
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            const mainImage = document.querySelector('input[name="imageUrl"]').files[0];
+            const additionalImagesCount = additionalImages.length;
+            const videosCount = productVideos.length;
+
+            if (!mainImage && additionalImagesCount === 0 && videosCount === 0) {
+                e.preventDefault();
+                alert('Please select at least one image or video for your product.');
+                return;
+            }
+
+            // Check total video size
+            const totalVideoSize = productVideos.reduce((total, vid) => total + vid.size, 0);
+            const maxTotalSize = 500 * 1024 * 1024; // 500MB total
+
+            if (totalVideoSize > maxTotalSize) {
+                e.preventDefault();
+                alert('Total video size exceeds 500MB limit. Please reduce video files.');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Product...';
+            submitBtn.disabled = true;
+        });
+    </script>
+}

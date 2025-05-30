@@ -1,0 +1,163 @@
+﻿@model nguyennhatquang_2280618967.Models.Category
+
+@{
+    ViewData["Title"] = "Create Category";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-plus-circle"></i> Create New Category</h2>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-tag"></i> Category Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" id="categoryForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-4">
+                            <label asp-for="Name" class="form-label fw-bold">
+                                <i class="fas fa-tag"></i> Category Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-tag"></i>
+                                </span>
+                                <input asp-for="Name" class="form-control" placeholder="Enter category name..."
+                                       autocomplete="off" maxlength="50" />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i>
+                                Choose a descriptive name for your category (max 50 characters)
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-muted mb-2">
+                                <i class="fas fa-eye"></i> Preview
+                            </h6>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge bg-primary me-2">
+                                            <i class="fas fa-tag"></i>
+                                        </div>
+                                        <span id="namePreview" class="fw-bold text-muted">
+                                            Category name will appear here...
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-save"></i> Create Category
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Card -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Tips</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-info"><i class="fas fa-check"></i> Good Category Names:</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Electronics</li>
+                                <li>Home & Garden</li>
+                                <li>Sports & Outdoors</li>
+                                <li>Books & Media</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning"><i class="fas fa-exclamation"></i> Best Practices:</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Use clear, descriptive names</li>
+                                <li>Keep names concise but meaningful</li>
+                                <li>Avoid special characters</li>
+                                <li>Be consistent with naming</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            // Real-time preview
+            $('#Name').on('input', function() {
+                var name = $(this).val().trim();
+                if (name) {
+                    $('#namePreview').text(name).removeClass('text-muted').addClass('text-dark');
+                } else {
+                    $('#namePreview').text('Category name will appear here...').removeClass('text-dark').addClass('text-muted');
+                }
+            });
+
+            // Form validation
+            $('#categoryForm').on('submit', function() {
+                $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating...');
+            });
+
+            // Name validation
+            $('#Name').on('blur', function() {
+                var name = $(this).val().trim();
+                if (name.length > 0) {
+                    checkCategoryName(name);
+                }
+            });
+        });
+
+        function checkCategoryName(name) {
+            $.ajax({
+                url: '@Url.Action("CheckCategoryName")',
+                type: 'POST',
+                data: { name: name },
+                success: function(isAvailable) {
+                    var nameField = $('#Name');
+                    var existingFeedback = nameField.siblings('.name-feedback');
+                    existingFeedback.remove();
+
+                    if (!isAvailable) {
+                        nameField.addClass('is-invalid');
+                        nameField.after('<div class="invalid-feedback name-feedback">This category name already exists.</div>');
+                        $('#submitBtn').prop('disabled', true);
+                    } else {
+                        nameField.removeClass('is-invalid').addClass('is-valid');
+                        nameField.after('<div class="valid-feedback name-feedback">Category name is available.</div>');
+                        $('#submitBtn').prop('disabled', false);
+                    }
+                }
+            });
+        }
+    </script>
+}
